@@ -241,7 +241,7 @@ static int process_config(VolumeManager* vm, VoldConfigs* configs) {
     }
 
     /* Loop through entries looking for ones that vold manages */
-    configs->has_adoptable = false;
+    configs->has_adoptable = true;
     configs->has_quota = false;
     configs->has_reserved = false;
     configs->has_compress = false;

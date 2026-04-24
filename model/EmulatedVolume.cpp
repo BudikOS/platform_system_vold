@@ -54,6 +54,14 @@ EmulatedVolume::EmulatedVolume(const std::string& rawPath, int userId)
     mLabel = "emulated";
     mFuseMounted = false;
     mUseSdcardFs = IsSdcardfsUsed();
+    // When FUSE BPF is unavailable, the legacy FUSE daemon path in
+    // Android 16 QPR2 does not correctly handle writes -- /sdcard/ will be
+    // unreliable until sdcardfs is used as a fallback.  Force sdcardfs if
+    // the kernel supports it; if not, legacy FUSE is kept as a last resort.
+    if (!mUseSdcardFs && !IsFuseBpfEnabled() && IsFilesystemSupported("sdcardfs")) {
+        LOG(INFO) << "FUSE BPF unavailable and sdcardfs supported; forcing sdcardfs";
+        mUseSdcardFs = true;
+    }
     mAppDataIsolationEnabled = base::GetBoolProperty(kVoldAppDataIsolationEnabled, false);
 }
 
@@ -65,6 +73,10 @@ EmulatedVolume::EmulatedVolume(const std::string& rawPath, dev_t device, const s
     mLabel = fsUuid;
     mFuseMounted = false;
     mUseSdcardFs = IsSdcardfsUsed();
+    if (!mUseSdcardFs && !IsFuseBpfEnabled() && IsFilesystemSupported("sdcardfs")) {
+        LOG(INFO) << "FUSE BPF unavailable and sdcardfs supported; forcing sdcardfs";
+        mUseSdcardFs = true;
+    }
     mAppDataIsolationEnabled = base::GetBoolProperty(kVoldAppDataIsolationEnabled, false);
 }
 
